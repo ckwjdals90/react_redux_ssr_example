@@ -28,6 +28,15 @@ app.get('*', (req, res) => {
 
   const promises = matchRoutes(Routes, req.path).map(({ route }) => {
     return route.loadData ? route.loadData(store) : null;
+  }).map(promise => {
+    // wrapping each promises with another promises
+    // to avoid the Promise.all from failing
+    // due to one or more promises in the promises package failing
+    if (promise) {
+      return new Promise((resolve, reject) => {
+        promise.then(resolve).catch(resolve);
+      });
+    }
   });
 
   Promise.all(promises).then(() => {
